@@ -49,7 +49,7 @@ class Plot3DArray(object):
         ax.scatter(others_loc[:, 0], others_loc[:, 1], others_loc[:, 2],
             c=others_price, cmap='Reds', vmin = _min, vmax = _max, marker='o', label="Have not adopted")
         for tie in ties:
-            ax.plot(tie[:, 0], tie[:, 1], tie[:, 2], color="whitesmoke", alpha=0.3, linewidth=0.5)
+            ax.plot(tie[:, 0], tie[:, 1], tie[:, 2], color="lightgray", alpha=0.3, linewidth=0.5)
         ax.legend()
         plt.title(title)
         self.plotted_img_paths.append(self._save_fig(output_path, filename, period))

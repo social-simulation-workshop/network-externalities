@@ -70,9 +70,9 @@ class ArgsModel(object):
     def add_exp_param(parser):
         parser.add_argument('--n_period', type=int, default=100,
             help="the # of the period to simulate.")
-        parser.add_argument('--n_trail', type=int, default=1,
+        parser.add_argument('--n_trail', type=int, default=10,
             help="the # of the simulation for each condition.")
-        parser.add_argument('--seed', type=int, default=22,
+        parser.add_argument('--seed', type=int, default=1,
             help="random seed.")
         parser.add_argument('--expNo', type=int, default=1,
             help="the number of the experiments to model one of the 7 conditions.")
@@ -227,9 +227,9 @@ class AgentDataHolder(object):
             
             # edu: college v.s. high school
             edu_yr = int(agent_data["Highest year of school completed"])
-            if edu_yr > 12:
+            if edu_yr >= 16:
                 college.append(agent_id)
-            if edu_yr <= 12:
+            if edu_yr < 12:
                 high_school.append(agent_id)
             
             # inc: high (>$55000) v.s. low (<$30000)
@@ -353,7 +353,7 @@ class InternetModel(object):
         def log_into_list(self):
             self.key1_perc.append(self.key1_n/len(self.ids_dict[self.keys[0]]))
             self.key2_perc.append(self.key2_n/len(self.ids_dict[self.keys[1]]))
-            self.key1_key2_odd_ratio.append(self.key1_n/self.key2_n if self.key2_n else 0)
+            self.key1_key2_odd_ratio.append(self.key1_perc[-1]/self.key2_perc[-1] if self.key2_n else 0)
         
 
         def get_latest_logged(self):
@@ -674,8 +674,7 @@ if __name__ ==  "__main__":
 
     path_to_agentInfo = os.path.join(os.getcwd(), "agent_info_fil.csv")
     agent_data_holder = AgentDataHolder(path_to_agentInfo)
-    visualize_3d(agent_data_holder, expNo=3, suffix=datetime.datetime.now().strftime('%m_%d_%H_%M'))
-    exit(-1)
+    #visualize_3d(agent_data_holder, expNo=4, suffix=datetime.datetime.now().strftime('%m_%d_%H_%M'))
 
     suffix = "{}_ntrail_{}".format(datetime.datetime.now().strftime('%m_%d_%H_%M'), args.n_trail)
     path_to_results = run_all_exp(args, agent_data_holder, suffix)
