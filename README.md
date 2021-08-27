@@ -1,7 +1,3 @@
-
-
-https://user-images.githubusercontent.com/43054769/131064194-e7d447a5-7f2a-4d82-984b-b0388242f4cf.mp4
-
 # Network_Externality
 This is the implementation of paper no.9 in 中研院社會模擬工作坊 2021.
 
