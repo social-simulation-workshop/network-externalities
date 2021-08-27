@@ -8,6 +8,7 @@ Team 5: 擬會作社模
 ## Quick Start
 此程式碼已經包成物件導向，可以直接執行。  
 parameters和method介紹will be updated soon.
+The code will cleaned soon.
 ```bash
 python model.py
 ```
@@ -24,6 +25,8 @@ https://user-images.githubusercontent.com/43054769/131053723-a77ad7ef-7ff2-41be-
 https://user-images.githubusercontent.com/43054769/131053607-c09f7dd5-3f6c-4d47-80ae-3fc26f470450.mp4
 
 ### 5. Specific NE, h=0.5
+
+https://user-images.githubusercontent.com/43054769/131064219-87c3a9b8-800a-444c-8491-f6dc2658252b.mp4
 
 ### 6. Specific NE, h=0.75
 
