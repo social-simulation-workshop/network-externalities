@@ -17,7 +17,7 @@ h越大代表同質傾向越大。
 
 ### 3. Specific NE, h=0.0
 
-https://user-images.githubusercontent.com/43054769/131053596-23dbde0a-fc0e-4705-b1e3-ae9dc2064a4a.mp4
+https://user-images.githubusercontent.com/43054769/131053723-a77ad7ef-7ff2-41be-b62c-3091c06bbb9a.mp4
 
 ### 4. Specific NE, h=0.25
 
