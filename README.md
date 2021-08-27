@@ -8,6 +8,7 @@ Team 5: 擬會作社模
 ## Quick Start
 此程式碼已經包成物件導向，可以直接執行。  
 parameters和method介紹will be updated soon.
+The code will cleaned soon.
 ```bash
 python model.py
 ```
