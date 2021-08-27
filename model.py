@@ -1,15 +1,28 @@
 import argparse
 import csv
 import datetime
-import os
-from PIL.Image import NONE
 import matplotlib.pyplot as plt
 import numpy as np
+import os
 import pandas as pd
 from sklearn.linear_model import LogisticRegression
 
 from plot_3Dmap import Plot3DArray
 
+
+def corr(x, y):
+    return np.corrcoef(x, y)[0][1]
+
+
+def str2bool(v):
+    if isinstance(v, bool):
+        return v
+    if v.lower() in ("yes", "true", "t", "y", "1"):
+        return True
+    elif v.lower() in ("no", "false", "f", "n", "0"):
+        return False
+    else:
+        raise argparse.ArgumentTypeError("Boolean value expected.")
 
 
 class ArgsModel(object):
@@ -26,61 +39,66 @@ class ArgsModel(object):
 
     @staticmethod
     def add_agent_param(parser):
-        parser.add_argument('--k', type=float, default=0.1,
+        parser.add_argument("--k", type=float, default=0.1,
             help="multiplicative constants for the pure income effect")
-        parser.add_argument('--delta', type=float, default=0.1,
+        parser.add_argument("--delta", type=float, default=0.1,
             help="multiplicative constants for network effect")
-        parser.add_argument('--gamma', type=float, default=0.5,
+        parser.add_argument("--gamma", type=float, default=0.5,
             help="exponents of income")
-        parser.add_argument('--alpha', type=float, default=0.5,
+        parser.add_argument("--alpha", type=float, default=0.5,
             help="exponents of the proportion of adopters")
         return parser
     
 
     @staticmethod
     def add_internet_param(parser):
-        parser.add_argument('--p_0', type=float, default=60.0,
+        parser.add_argument("--p_0", type=float, default=60.0,
             help="the initial Internet price")
-        parser.add_argument('--p_min', type=float, default=28.74,
+        parser.add_argument("--p_min", type=float, default=28.74,
             help="the equilibrium price level")
-        parser.add_argument('--a', type=float, default=3.34,
+        parser.add_argument("--a", type=float, default=3.34,
             help="the speed of reversion to that equilibrium price")
         return parser
     
 
     @staticmethod
     def add_network_param(parser):
-        parser.add_argument('--w_race', type=float, default=0.83,
+        parser.add_argument("--w_race", type=float, default=0.83,
             help="the weight of race")
-        parser.add_argument('--w_edu', type=float, default=0.53,
+        parser.add_argument("--w_edu", type=float, default=0.53,
             help="the weight of education")
-        parser.add_argument('--w_inc', type=float, default=0.53,
+        parser.add_argument("--w_inc", type=float, default=0.53,
             help="the weight of income")
-        parser.add_argument('--h', type=float, default=0.,
+        parser.add_argument("--h", type=float, default=0.,
             help="homophily bias")
-        parser.add_argument('--is_spec_net', type=bool, default=True,
+        parser.add_argument("--is_spec_net", type=bool, default=True,
             help="is identity-specific net")
-        parser.add_argument('--scaler', type=int, default=3,
+        parser.add_argument("--scaler", type=int, default=3,
             help="""the scaler to times the target number of relations for the agent i
-                    as the size of the agent i's in-group.""")
+                    as the size of the agent i"s in-group.""")
         return parser
     
 
     @staticmethod
     def add_exp_param(parser):
-        parser.add_argument('--n_period', type=int, default=100,
+        parser.add_argument("--n_period", type=int, default=100,
             help="the # of the period to simulate.")
-        parser.add_argument('--n_trail', type=int, default=10,
+        parser.add_argument("--n_trail", type=int, default=10,
             help="the # of the simulation for each condition.")
-        parser.add_argument('--seed', type=int, default=1,
+        parser.add_argument("--seed", type=int, default=1,
             help="random seed.")
-        parser.add_argument('--expNo', type=int, default=1,
+        parser.add_argument("--expNo", type=int, default=1,
             help="the number of the experiments to model one of the 7 conditions.")
+        parser.add_argument("--run_all", type=str2bool, nargs="?", const=True, default=False, 
+            help="use \"--run_all\" to run all experiments and plot results.")
+        parser.add_argument("--vis", type=str2bool, nargs="?", const=True, default=False, 
+            help="use \"--vis\" to visualize each period in the experiments expNo.")
         return parser
     
 
     @staticmethod
     def set_exp_param(args, expNo):
+        """ set essential parameters for each experiments """
         args.expNo = expNo
         if expNo == 1:
             args.delta = 0.
@@ -115,20 +133,16 @@ class ArgsModel(object):
         return self.set_exp_param(args, expNo)
 
 
-def corr(x, y):
-    return np.corrcoef(x, y)[0][1]
-
-
 class AgentDataHolder(object):
-    
+
     def __init__(self, path_to_agentInfo) -> None:
         super().__init__()
-        self.agents_data = self.pre_processing(path_to_agentInfo)
-        self.race, self.edu, self.inc = self.getID_group_by_race(path_to_agentInfo)
+        self.agents_data = self._pre_processing(path_to_agentInfo)
+        self.race, self.edu, self.inc = self._getID_group_by_race(path_to_agentInfo)
     
 
     @staticmethod
-    def pre_processing(path_to_info):
+    def _pre_processing(path_to_info):
         """
         Return
         - agent_row -> 2d np.array, size=(# of agents, 6):
@@ -136,7 +150,7 @@ class AgentDataHolder(object):
              np.array([id, network_size, race_nor, education_nor, income_nor, race, education, income]),
              ....]
         """
-        info_f = open(path_to_info, newline='')
+        info_f = open(path_to_info, newline="")
         agent_rows = csv.reader(info_f)
         agents_data = None
         for row_idx, agent_row in enumerate(agent_rows):
@@ -203,12 +217,14 @@ class AgentDataHolder(object):
 
 
     @staticmethod
-    def getID_group_by_race(path_to_info):
+    def _getID_group_by_race(path_to_info):
+        """
+        """
         white, black = list(), list()
         college, high_school = list(), list()
         high, low = list(), list()
 
-        info_f = open(path_to_info, newline='')
+        info_f = open(path_to_info, newline="")
         agent_rows = csv.reader(info_f)
         for row_idx, agent_row in enumerate(agent_rows):
             if row_idx == 0:
@@ -272,17 +288,22 @@ class Agent(object):
 
     def __init__(self, net_size, id, agent_data_norm, agent_data) -> None:
         super().__init__()
+        # reservation price
         self.reser_price = None
+        # pure network effect
         self.net_effect = None
+        # have adopted the internet
         self.have_bought = False
-        self.net_perc = 0 # percentage of adopters
+        # percentage of adopters
+        self.net_perc = 0 
+        # the list to all agents tied with
         self.spec_net_list = list()
 
+        # agent data
         self.net_size = int(net_size)
         self.id = int(id)
         self.agent_data_norm = agent_data_norm
         self.agent_data = agent_data
-
         self.inc = self.agent_data[2]
 
 
@@ -331,7 +352,22 @@ class InternetModel(object):
     dis_matrix = None
 
     class Logger(object):
+        """
+        Logger for recording group-wise data.
+        1. group1 adoption rate
+        2. group2 adoption rate
+        3. odds ratios of group1 to group2
+        """
+
         def __init__(self, ids_dict, keys) -> None:
+            """
+            Param:
+            - ids_dict -> dict:
+                {group1_name: [id1, id2, id3, ... (ids of agent in group1)],
+                 group2_name: [id1, id2, id3, ... (ids of agent in group2)]}
+            - keys -> list of str:
+                [group1_name, group2_name]
+            """
             super().__init__()
             self.ids_dict = ids_dict
             self.keys = keys
@@ -357,28 +393,42 @@ class InternetModel(object):
         
 
         def get_latest_logged(self):
+            """ Get the string descripting the 3 types of data. """
             return "{}: {:.2f}%; {}:{:.2f}%; odd_r: {:.2f}".format(self.keys[0], self.key1_perc[-1],
                 self.keys[1], self.key2_perc[-1], self.key1_key2_odd_ratio[-1])
         
 
         def get_odd_ratio(self):
+            """ Get the list of logged odds ratios. """
             return self.key1_key2_odd_ratio
                 
 
     def __init__(self, args, data_holder:AgentDataHolder, plotter3d=None, verbose=True) -> None:
+        """
+        Param:
+        - data_holder -> AgentDataHolder:
+            the holder handling agents" information.
+        - plotter3d -> Plot3DArray:
+            pass a Plot3DArray object for plotting location of agents in 3d space
+            and ties between agents.
+        - verbose -> bool:
+            print data of each period.
+        """
         super().__init__()
         self.args = args
         self.data_holder = data_holder
-        self.dis_w = np.array([args.w_race, args.w_edu, args.w_inc])
-        self.verbose = verbose
         self.plotter = plotter3d
-
+        self.verbose = verbose
+        
+        self.dis_w = np.array([args.w_race, args.w_edu, args.w_inc])
+        # the # of adopters in the whole network
         self.adopters_n = 0
-        self.new_adopters_n = 0
+        # the logged percentage of adopters of each period
         self.adopters_perc = list()
         self.internet_price = args.p_0
         self.period = 0
 
+        # list of Agent object
         self.agents = None
         self.race_logger = self.Logger(data_holder.get_agent_race_group_ids(),
                                        keys=["white", "black"])
@@ -390,12 +440,12 @@ class InternetModel(object):
         
         if self.verbose:
             print("Args: {}".format(self.args))
-        self.preparation_phrase()
+        self._preparation_phrase()
     
 
-    def preparation_phrase(self):
+    def _preparation_phrase(self):
         # 1. Build N Agents
-        self.agents, self.agent_n = self.build_agents()
+        self.agents, self.agent_n = self._build_agents()
 
         # 2. Build a network if the identity-specific network is enabled
         if self.args.is_spec_net:
@@ -430,7 +480,7 @@ class InternetModel(object):
             print("Model finished initialization and preparation.")
 
 
-    def build_agents(self):
+    def _build_agents(self):
         agents = list()
         self.agents_data = self.data_holder.get_agent_info()
         for agent_data in self.agents_data:
@@ -443,10 +493,12 @@ class InternetModel(object):
         if self.verbose:
             print("{} agents initialized.".format(agent_n))
         
-        # for logistic regression
+        # social status (normalized value) of every agents
         self.agents_data_norm = np.copy(self.agents_data[:, 2:5])
+        # data (original value), used for logistic regression
         self.agents_data_X = np.copy(self.agents_data[:, 5:8])
         self.agents_data_X[:, 2] = np.log(self.agents_data_X[:, 2])
+
         return agents, agent_n
 
 
@@ -476,10 +528,17 @@ class InternetModel(object):
     
 
     def get_agent_net_effect(self):
+        """ Return: 1d nd.array, pure network effects of every agents. """
         return np.array([ag.net_effect for ag in self.agents])
     
 
     def get_all_tie(self):
+        """
+        Return
+        - all_ties -> 3d np.array, size=(# of ties, 2, 3)
+            Each tie has its own size of array of size (2, 3), which is 
+            the social status (location in 3d space) of two relating agents.
+        """
         all_ties = None
         for ag in self.agents:
             for ag_tie in ag.spec_net_list:
@@ -551,8 +610,14 @@ class InternetModel(object):
     def get_data_for_plotting(self):
         """
         Return
-        - data_concat -> 3d np.array, size=(1, n_period, 4)
-            last axis: [percentage of adopters, race odd ratio, education odd ratio, income odd ratio]
+        - data_concat -> 3d np.array, size=(1, n_period, 7):
+            last axis: [percentage of adopters,
+                        odds ratios of two group in term of race,
+                        odds ratios of two group in term of education,
+                        odds ratios of two group in term of income,
+                        logit coefficient of race,
+                        logit coefficient of education,
+                        logit coefficient of (logged) income]
         """
         adp_perc = np.array(self.adopters_perc).reshape((1, -1, 1))
         race_odd = np.array(self.race_logger.get_odd_ratio()).reshape((1, -1, 1))
@@ -564,15 +629,36 @@ class InternetModel(object):
     
     
     def get_agent_current_data(self):
+        """
+        Return:
+        - agents_data_X -> 2d np.array, size=(# of agents, 3)
+            the social status (original values) of each agents.
+            Note that the income is logged based on e.
+        - agents_adp_y -> 1d np.array, size=(# of agents, )
+            1.0 if agents have adopted, else 0.0.
+        """
         agents_adp_y = np.array([(1. if ag.have_bought else 0.) for ag in self.agents])
         return self.agents_data_X, agents_adp_y
     
+
     def get_agent_current_data_norm(self):
+        """
+        Return:
+        - agents_data_X -> 2d np.array, size=(# of agents, 3)
+            the social status (normalized values) of each agents.
+        - agents_adp_y -> 1d np.array, size=(# of agents, )
+            1.0 if agents have adopted, else 0.0.
+        """
         agents_adp_y = np.array([(1. if ag.have_bought else 0.) for ag in self.agents])
         return self.agents_data_norm, agents_adp_y
 
 
     def logistic_reg(self):
+        """
+        Return:
+        - coef -> 1d np.array, size=(3, )
+            the coefficient of logistic regression of the current period.
+        """
         agents_data_X, agents_adp_y = self.get_agent_current_data()
         log_model = LogisticRegression(random_state=args.seed,
                                        class_weight=None)
@@ -582,6 +668,11 @@ class InternetModel(object):
 
 
 def visualize_3d(agent_data_holder, expNo, suffix):
+    """
+    Generate the visualization of the experiment expNo.
+    An .gif file, an .mp4 file, and a directory containing images of every period is generated.
+    Noted that expNo should be in [3, 4, 5, 6, 7].
+    """
     args_exp = parser.get_exp_args(expNo=expNo)
     filename_prefix = "{}_expNo({})".format(suffix, expNo)
     plotter = Plot3DArray(filename_prefix=filename_prefix)
@@ -594,6 +685,10 @@ def visualize_3d(agent_data_holder, expNo, suffix):
 
 def run_all_exp(args, agent_data_holder, suffix,
     output_dir=os.path.join(os.getcwd(), "csvfiles")):
+    """
+    Run all experiments 1~7.
+    The logged data of each period of every experiment is seperately saved into csv files.
+    """
     paths_to_csv = list()
     for exp_idx in range(1, 8):
         data_all_trail = None
@@ -608,13 +703,14 @@ def run_all_exp(args, agent_data_holder, suffix,
         data_trail_avg = np.mean(data_all_trail, axis=0)
 
         filen = "{}_expNo{}_adpPerc_raceOdd_eduOdd_incOdd.csv".format(suffix, exp_idx)
-        np.savetxt(os.path.join(output_dir, filen), data_trail_avg, delimiter=',',
+        np.savetxt(os.path.join(output_dir, filen), data_trail_avg, delimiter=",",
             header="adpPerc,raceOdd,eduOdd,incOdd, raceCoef, eduCoef, incCoef")
         paths_to_csv.append(os.path.join(output_dir, filen))
         print("data saved to {}".format(os.path.join(output_dir, filen)))
     return paths_to_csv
 
-def read_result(path_to_results, col_n=["adp_perc", "race_odd", "edu_odd", "inc_odd"]):
+
+def read_result(path_to_results):
     data_list = list()
     for path in path_to_results:
         data_list.append(pd.read_csv(path).values)
@@ -633,6 +729,7 @@ def read_result(path_to_results, col_n=["adp_perc", "race_odd", "edu_odd", "inc_
             "race_coef":race_coef,
             "edu_coef":edu_coef,
             "inc_coef":inc_coef}
+
 
 def plot_lines(data, fn, title, legend_n, suffix, xlabel="Period", ylabel="Odds Ratio", add_no_NE=False, figure_size=(9, 9), linewidth=1,
     output_dir=os.path.join(os.getcwd(), "imgfiles")):
@@ -674,15 +771,16 @@ if __name__ ==  "__main__":
 
     path_to_agentInfo = os.path.join(os.getcwd(), "agent_info_fil.csv")
     agent_data_holder = AgentDataHolder(path_to_agentInfo)
-    #visualize_3d(agent_data_holder, expNo=4, suffix=datetime.datetime.now().strftime('%m_%d_%H_%M'))
 
-    suffix = "{}_ntrail_{}".format(datetime.datetime.now().strftime('%m_%d_%H_%M'), args.n_trail)
-    path_to_results = run_all_exp(args, agent_data_holder, suffix)
+    if args.vis:
+        visualize_3d(agent_data_holder, expNo=args.expNo, suffix=datetime.datetime.now().strftime("%m_%d_%H_%M"))
 
-    #suffix = "08_26_22_04_ntrail_5"
-    #path_to_results = [os.path.join(os.getcwd(), "csvfiles", "{}_expNo{}_adpPerc_raceOdd_eduOdd_incOdd.csv".format(suffix,exp_idx)) for exp_idx in range(1, 8)]
-    legend_n = ["No NE", "Gen NE", "Spe NE (h=0)", "Spe NE (h=0.25)", "Spe NE (h=0.5)", "Spe NE (h=0.75)", "Spe NE (h=1.0)"]
-    data_dict = read_result(path_to_results)
-    plot_result(data_dict, legend_n, suffix)
+    if args.run_all:
+        suffix = "{}_ntrail_{}".format(datetime.datetime.now().strftime("%m_%d_%H_%M"), args.n_trail)
+        path_to_results = run_all_exp(args, agent_data_holder, suffix)
+
+        legend_n = ["No NE", "Gen NE", "Spe NE (h=0)", "Spe NE (h=0.25)", "Spe NE (h=0.5)", "Spe NE (h=0.75)", "Spe NE (h=1.0)"]
+        data_dict = read_result(path_to_results)
+        plot_result(data_dict, legend_n, suffix)
 
     
