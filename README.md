@@ -1,4 +1,4 @@
-# Network_Externality
+# network-externality
 This is the implementation of paper no.9 in [2021 Soical Simulation Workshop at Academia Sinica](https://www.ios.sinica.edu.tw/msgNo/20210723-1). Our team (5, 擬會作社模) won the second place in the final stage of the workshop.
 
 Paper: [How Network Externalities Can Exacerbate Intergroup Inequality (DiMaggio and Garip, 2011)](https://www.jstor.org/stable/pdf/10.1086/659653.pdf?refreqid=excelsior%3Aabf277dd8e8dbfc001069fcbf9e1b7aa)
