@@ -202,14 +202,16 @@ class InternetModel(object):
                 for _ in range(agent.get_net_size()):
                     prob = np.random.uniform()
                     # tie with out-group
+                    # random tie
                     if prob > prob_to_ingroup:
-                        chosen_ag = np.random.choice(outgroup_agent_idx)
-                        outgroup_agent_idx = outgroup_agent_idx[outgroup_agent_idx!=chosen_ag]
+                        # chosen_ag = np.random.choice(outgroup_agent_idx)
+                        # outgroup_agent_idx = outgroup_agent_idx[outgroup_agent_idx!=chosen_ag]
+                        chosen_ag = np.random.choice(sorted_idx)
                         agent.tie_with(self.agents[chosen_ag])
                     # tie with in-group
                     elif prob <= prob_to_ingroup:
                         chosen_ag = np.random.choice(ingroup_agent_idx)
-                        ingroup_agent_idx = ingroup_agent_idx[ingroup_agent_idx!=chosen_ag]
+                        # ingroup_agent_idx = ingroup_agent_idx[ingroup_agent_idx!=chosen_ag]
                         agent.tie_with(self.agents[chosen_ag])
         
         # 3. Initialize Agents’ reservation price
