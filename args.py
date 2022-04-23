@@ -59,7 +59,7 @@ class ArgsModel(object):
     def add_exp_param(parser):
         parser.add_argument("--n_period", type=int, default=100,
             help="the # of the period to simulate.")
-        parser.add_argument("--n_trails", type=int, default=2,
+        parser.add_argument("--n_trails", type=int, default=25,
             help="the # of the simulation for each condition.")
         parser.add_argument("--rnd_seed", type=int, default=1025,
             help="random seed.")

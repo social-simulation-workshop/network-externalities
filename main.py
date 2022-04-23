@@ -140,7 +140,8 @@ class InternetModel(object):
             return self.key1_key2_odd_ratio
                 
 
-    def __init__(self, args, data_holder: AgentDataHolder, plotter3d=None, verbose=True) -> None:
+    def __init__(self, args, data_holder: AgentDataHolder, random_seed,
+        plotter3d=None, verbose=True) -> None:
         """
         Param:
         - data_holder -> AgentDataHolder:
@@ -152,6 +153,7 @@ class InternetModel(object):
             print data of each period.
         """
         super().__init__()
+        np.random.seed(random_seed)
         self.args = args
         self.data_holder = data_holder
         self.plotter = plotter3d
@@ -208,7 +210,7 @@ class InternetModel(object):
                     elif prob <= prob_to_ingroup:
                         chosen_ag = np.random.choice(ingroup_agent_idx)
                         ingroup_agent_idx = ingroup_agent_idx[ingroup_agent_idx!=chosen_ag]
-                        agent.tie_with(self.agents[np.random.choice(ingroup_agent_idx)])
+                        agent.tie_with(self.agents[chosen_ag])
         
         # 3. Initialize Agents’ reservation price
         for agent in self.agents:
@@ -436,11 +438,13 @@ def run_all_exp(args, agent_data_holder, suffix,
         args_exp = parser.get_args_by_expNo(expNo=exp_idx)
         print("ExpNo {} | Args: {}".format(exp_idx, args_exp))
         for trail_idx in range(args.n_trails):
-            print("ExpNo {} | Trail {}/{}".format(exp_idx, trail_idx+1, args.n_trails))
-            internet_model = InternetModel(args_exp, agent_data_holder, verbose=False)
+            internet_model = InternetModel(args_exp, agent_data_holder, random_seed=args.rnd_seed+trail_idx, verbose=False)
             internet_model.simulate()
             data_a_trail = internet_model.get_data_for_plotting()
+            print("expNo {} | trail {}/{} | adoption rate: {}%".format(exp_idx, trail_idx+1, args.n_trails, data_a_trail[0, -1, 0]))
             data_all_trail = np.concatenate((data_all_trail, data_a_trail), axis=0) if data_all_trail is not None else data_a_trail
+            if args_exp.expNo == 1 or args_exp.expNo == 2:
+                break
         data_trail_avg = np.mean(data_all_trail, axis=0)
 
         filen = "{}_expNo{}_adpPerc_raceOdd_eduOdd_incOdd.csv".format(suffix, exp_idx)
@@ -581,7 +585,6 @@ if __name__ ==  "__main__":
 
     parser = ArgsModel()
     args = parser.get_args()
-    np.random.seed(args.rnd_seed)
 
     path_to_agentInfo = os.path.join(CWD, "agent_info_fil.csv")
     agent_data_holder = AgentDataHolder(path_to_agentInfo)

@@ -127,7 +127,7 @@ class AgentDataHolder(object):
             # inc: high (>$55000) v.s. low (<$30000)
             inc_str = agent_dict["Total family income"]
             if inc_str == "Under 1000":
-                inc_lower_bound, inc_upper_bound = 0, 999
+                inc_lower_bound, inc_upper_bound = 1, 999
             elif inc_str == "110000 or over":
                 inc_lower_bound, inc_upper_bound = 110000, 650000
             else:
