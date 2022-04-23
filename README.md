@@ -26,9 +26,9 @@ plot_result(data_dict, legend_n, suffix)
 ### Run in Ternimals
 ```bash
 # visualize experiments 3
-python model.py --vis --expNo 3
+python main.py --vis --expNo 3
 # run all 7 experiments, where each experiment runs 1000 trails
-python model.py --run_all --n_trail 1000
+python main.py --run_all --n_trail 1000
 ```
 
 ## Experiments Conditions
